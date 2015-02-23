@@ -109,10 +109,10 @@ public class Main extends Display {
 	private LabelRenderer m_nodeRenderer;
 	private EdgeRenderer m_edgeRenderer;
 
-	public static final int SEARCHEDCOLOR = ColorLib.rgb(255, 150, 120);
-	public static final int SHAREDATTRCOLOR = ColorLib.rgb(150, 255, 150);
-	public static final int FOCUSCOLOR = ColorLib.rgb(255, 255, 0);
-	public static final int NEARBYCOLOR = ColorLib.rgb(164, 193, 193);
+	public static final int SEARCHEDCOLOR = ColorLib.hex("#b2182b");
+	public static final int SHAREDATTRCOLOR = ColorLib.hex("#2166ac");
+	public static final int FOCUSCOLOR = ColorLib.hex("#d1e5f0");
+	public static final int NEARBYCOLOR = ColorLib.hex("#fddbc7");
 
 	public static final Color BACKGROUND = Color.WHITE;
 	public static final Color FOREGROUND = Color.BLACK;
@@ -149,14 +149,13 @@ public class Main extends Display {
 		m_vis.setRendererFactory(rf);
 
 		// colors
-		ItemAction nodeColor = new NodeColorAction(treeNodes);
+		ItemAction nodeColor = new NodeColorAction(treeNodes, VisualItem.FILLCOLOR);
 		ItemAction nodeStroke = new NodeStrokeAction(treeNodes);
-		ItemAction textColor = new ColorAction(treeNodes, VisualItem.TEXTCOLOR,
-				ColorLib.rgb(0, 0, 0));
+		ItemAction textColor = new NodeColorAction(treeNodes, VisualItem.TEXTCOLOR);
 		m_vis.putAction("textColor", textColor);
-
-		ItemAction edgeColor = new ColorAction(treeEdges,
-				VisualItem.STROKECOLOR, ColorLib.rgb(200, 200, 200));
+		
+        ItemAction edgeColor = new ColorAction(treeEdges,
+                VisualItem.STROKECOLOR, ColorLib.rgb(200,200,200));
 
 		// quick repaint
 		ActionList repaint = new ActionList();
@@ -439,10 +438,12 @@ public class Main extends Display {
 		JFastLabel sharedattrColor = new JFastLabel(" Nodes sharing institutions ");
 		applyTheme(sharedattrColor);
 		sharedattrColor.setBackground(ColorLib.getColor(SHAREDATTRCOLOR));
+		sharedattrColor.setForeground(BACKGROUND);
 
 		JFastLabel searchedColor = new JFastLabel(" Nodes satisfying search ");
 		applyTheme(searchedColor);
 		searchedColor.setBackground(ColorLib.getColor(SEARCHEDCOLOR));
+		searchedColor.setForeground(BACKGROUND);
 		
 		JFastLabel focusColor = new JFastLabel(" Focused node ");
 		applyTheme(focusColor);
@@ -545,22 +546,24 @@ public class Main extends Display {
 	}
 
 	public static class NodeColorAction extends ColorAction {
-
-		public NodeColorAction(String group) {
-			super(group, VisualItem.FILLCOLOR);
+		String colorType;
+		public NodeColorAction(String group, String colorType) {
+			super(group, colorType);
+			this.colorType = colorType;
 		}
 
 		public int getColor(VisualItem item) {
+			Boolean isText = colorType.equals(VisualItem.TEXTCOLOR);
 			if (m_vis.isInGroup(item, Visualization.FOCUS_ITEMS))
-				return FOCUSCOLOR; 
+				return isText ? ColorLib.gray(0) : FOCUSCOLOR; 
 			else if (itemSharesAttrs(item, itemHoveredAttrs)) 
-				return SHAREDATTRCOLOR; 
+				return isText ? ColorLib.gray(255) : SHAREDATTRCOLOR; 
 			else if (m_vis.isInGroup(item, Visualization.SEARCH_ITEMS))
-				return SEARCHEDCOLOR; 
+				return isText ? ColorLib.gray(255) : SEARCHEDCOLOR; 
 			else if (item.getDOI() > -1)
-				return NEARBYCOLOR; 
+				return isText ? ColorLib.gray(0) : NEARBYCOLOR; 
 			else
-				return ColorLib.rgba(255, 255, 255, 0);
+				return isText ? ColorLib.gray(0) : ColorLib.rgba(255, 255, 255, 0);
 		}
 
 	} // end of inner class TreeMapColorAction
@@ -577,7 +580,7 @@ public class Main extends Display {
 			else if (itemSharesAttrs(item, itemHoveredAttrs)) {
 				return 1.5;
 			} else if (m_vis.isInGroup(item, Visualization.SEARCH_ITEMS))
-				return 1.3;
+				return 1.5;
 			else
 				return getDefaultSize();
 		}
@@ -585,7 +588,6 @@ public class Main extends Display {
 	}
 
 	public static boolean itemSharesAttrs(VisualItem item, String[] otherAttrs) {
-		System.out.println(extraInfoLabel);
 		if (item.canGetString(extraInfoLabel) && otherAttrs != null) {
 			String[] instis = ((String) item.get(extraInfoLabel)).split(extraInfoDelimiter);
 
